@@ -47,7 +47,7 @@ export default function Screening() {
 
   return (
     <div style={{ background: bgGradient, minHeight: "100vh" }}>
-      <Navbar isDarkMode={isDarkMode} />
+      <Navbar />
       
       <style>{`
         @keyframes fadeIn {
@@ -60,23 +60,30 @@ export default function Screening() {
         }
         .mode-card { animation: fadeIn 0.5s ease-out; }
         .recording-pulse { animation: pulseGlow 1.5s ease-in-out infinite; }
+        @media (max-width: 768px) {
+          .screening-container { padding: 40px 20px !important; }
+          .screening-title { font-size: 28px !important; }
+          .screening-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important; gap: 20px !important; }
+          .screening-card { padding: 25px !important; }
+          .screening-icon { width: 50px !important; }
+        }
       `}</style>
       
-      <div style={{ padding: "60px 40px", maxWidth: "1000px", margin: "0 auto" }}>
-        <h1 style={{ fontSize: "36px", fontWeight: "bold", color: textPrimary, marginBottom: "40px", textAlign: "center" }}>
+      <div className="screening-container" style={{ padding: "clamp(30px, 5vw, 60px) clamp(16px, 3vw, 40px)", maxWidth: "1000px", margin: "0 auto" }}>
+        <h1 className="screening-title" style={{ fontSize: "clamp(28px, 6vw, 36px)", fontWeight: "bold", color: textPrimary, marginBottom: "clamp(25px, 5vw, 40px)", textAlign: "center" }}>
           Voice Screening
         </h1>
 
         {!mode ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "30px" }}>
+          <div className="screening-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(clamp(220px, 100%, 300px), 1fr))", gap: "clamp(20px, 4vw, 30px)" }}>
             {/* Record Option */}
             <div
-              className="mode-card"
+              className="mode-card screening-card"
               onClick={() => setMode("record")}
               style={{
                 backgroundColor: cardBg,
                 border: cardBorder,
-                padding: "40px",
+                padding: "clamp(20px, 4vw, 40px)",
                 borderRadius: "12px",
                 textAlign: "center",
                 cursor: "pointer",
@@ -416,7 +423,7 @@ export default function Screening() {
           </div>
         )}
       </div>
-      <Footer isDarkMode={isDarkMode} isAuthenticated={false} />
+      <Footer isAuthenticated={false} />
     </div>
   );
 }

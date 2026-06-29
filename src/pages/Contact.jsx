@@ -23,16 +23,23 @@ export default function Contact() {
 
   return (
     <div style={{ background: bgGradient, minHeight: "100vh" }}>
-      <Navbar isDarkMode={isDarkMode} />
+      <Navbar />
+      <style>{`
+        @media (max-width: 768px) {
+          .contact-container { padding: 40px 20px !important; }
+          .contact-title { font-size: 28px !important; }
+          .contact-grid { gap: 25px !important; }
+        }
+      `}</style>
       
-      <div style={{ padding: "60px 40px", maxWidth: "1000px", margin: "0 auto" }}>
-        <h1 style={{ fontSize: "36px", fontWeight: "bold", color: textPrimary, marginBottom: "40px", textAlign: "center" }}>
+      <div className="contact-container" style={{ padding: "clamp(30px, 5vw, 60px) clamp(16px, 3vw, 40px)", maxWidth: "1000px", margin: "0 auto" }}>
+        <h1 className="contact-title" style={{ fontSize: "clamp(28px, 6vw, 36px)", fontWeight: "bold", color: textPrimary, marginBottom: "clamp(25px, 5vw, 40px)", textAlign: "center" }}>
           Contact Us
         </h1>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "40px", marginBottom: "60px" }}>
           {[
-            { icon: Mail, title: "Email", value: "info@neurovoice.com" },
+            { icon: Mail, title: "Email", value: "info@neurovox.com" },
             { icon: Phone, title: "Phone", value: "+1 (555) 123-4567" },
             { icon: MapPin, title: "Address", value: "123 Tech Street, Innovation City" }
           ].map((contact, i) => {
@@ -145,7 +152,7 @@ export default function Contact() {
           </button>
         </form>
       </div>
-      <Footer isDarkMode={isDarkMode} isAuthenticated={false} />
+      <Footer isAuthenticated={false} />
     </div>
   );
 }

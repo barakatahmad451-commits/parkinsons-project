@@ -2,13 +2,14 @@ import { useState } from "react";
 import { User, Mail, Phone, Save, TrendingUp, Award, Calendar, Settings, Lock } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useDarkMode } from "../context/DarkModeContext";
 
 export default function Profile({ setIsLoggedIn }) {
-  const [isDarkMode] = useState(true);
+  const { isDarkMode } = useDarkMode();
   const [profileData, setProfileData] = useState({
-    name: "Dr. Sarah Anderson",
-    email: "dr.sarah.anderson@medical.com",
-    phone: "+1 (555) 123-4567",
+    name: "Dr. Nimra & Dr. Yumna, Dr. Barakat",
+    email: "dr.nimra_barakat_yumna@medical.com",
+    phone: "+92 3308686716",
     bio: "Healthcare professional interested in neurological screening"
   });
   const [isEditing, setIsEditing] = useState(false);
@@ -36,23 +37,33 @@ export default function Profile({ setIsLoggedIn }) {
 
   return (
     <div style={{ background: bgGradient, minHeight: "100vh" }}>
-      <Navbar isDarkMode={isDarkMode} isAuthenticated={true} setIsLoggedIn={setIsLoggedIn} />
+      <Navbar isAuthenticated={true} setIsLoggedIn={setIsLoggedIn} />
 
-      <div style={{ padding: "60px 40px", maxWidth: "1000px", margin: "0 auto" }}>
-        <h1 style={{ fontSize: "36px", fontWeight: "bold", color: textPrimary, marginBottom: "40px" }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .profile-container { padding: 40px 20px !important; }
+          .profile-title { font-size: 28px !important; margin-bottom: 25px !important; }
+          .profile-header { flex-direction: column !important; text-align: center !important; gap: 20px !important; padding: 25px !important; }
+          .profile-avatar { width: 80px !important; height: 80px !important; }
+          .profile-stats { grid-template-columns: 1fr !important; gap: 15px !important; }
+        }
+      `}</style>
+
+      <div className="profile-container" style={{ padding: "clamp(30px, 5vw, 60px) clamp(16px, 3vw, 40px)", maxWidth: "1000px", margin: "0 auto" }}>
+        <h1 className="profile-title" style={{ fontSize: "clamp(28px, 6vw, 36px)", fontWeight: "bold", color: textPrimary, marginBottom: "clamp(25px, 5vw, 40px)" }}>
           My Profile
         </h1>
 
         {/* Profile Header */}
-        <div style={{
+        <div className="profile-header" style={{
           backgroundColor: cardBg,
           border: cardBorder,
-          padding: "40px",
+          padding: "clamp(20px, 4vw, 40px)",
           borderRadius: "12px",
           marginBottom: "30px",
           display: "flex",
           alignItems: "center",
-          gap: "30px"
+          gap: "clamp(15px, 3vw, 30px)"
         }}>
           <div style={{
             width: "100px",
@@ -354,7 +365,7 @@ export default function Profile({ setIsLoggedIn }) {
           </div>
         </div>
       </div>
-      <Footer isDarkMode={isDarkMode} isAuthenticated={true} />
+      <Footer isAuthenticated={true} />
     </div>
   );
 }

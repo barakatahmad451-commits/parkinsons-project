@@ -1,10 +1,10 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useDarkMode } from "../context/DarkModeContext";
 
 export default function ForProfessionals() {
-  const [isDarkMode] = useState(true);
+  const { isDarkMode } = useDarkMode();
 
   const bgGradient = isDarkMode
     ? "linear-gradient(135deg, #0f1729 0%, rgba(20, 45, 100, 0.8) 100%)"
@@ -28,21 +28,27 @@ export default function ForProfessionals() {
     },
     {
       title: "API Access",
-      description: "Integrate NeuroVoice into your existing systems"
+      description: "Integrate NeuroVox into your existing systems"
     }
   ];
 
   return (
     <div style={{ background: bgGradient, minHeight: "100vh" }}>
-      <Navbar isDarkMode={isDarkMode} />
+      <Navbar />
+      <style>{`
+        @media (max-width: 768px) {
+          .prof-container { padding: 40px 20px !important; }
+          .prof-title { font-size: 28px !important; }
+        }
+      `}</style>
       
-      <div style={{ padding: "60px 40px", maxWidth: "1000px", margin: "0 auto" }}>
-        <h1 style={{ fontSize: "36px", fontWeight: "bold", color: textPrimary, marginBottom: "20px" }}>
+      <div className="prof-container" style={{ padding: "clamp(30px, 5vw, 60px) clamp(16px, 3vw, 40px)", maxWidth: "1200px", margin: "0 auto" }}>
+        <h1 className="prof-title" style={{ fontSize: "clamp(28px, 6vw, 36px)", fontWeight: "bold", color: textPrimary, marginBottom: "clamp(30px, 5vw, 50px)", textAlign: "center" }}>
           For Healthcare Professionals
         </h1>
         
         <p style={{ fontSize: "18px", color: textSecondary, marginBottom: "50px" }}>
-          Empower your clinical practice with NeuroVoice's professional tools
+          Empower your clinical practice with NeuroVox's professional tools
         </p>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "30px", marginBottom: "50px" }}>
@@ -78,7 +84,7 @@ export default function ForProfessionals() {
           </Link>
         </div>
       </div>
-      <Footer isDarkMode={isDarkMode} isAuthenticated={false} />
+      <Footer isAuthenticated={false} />
     </div>
   );
 }

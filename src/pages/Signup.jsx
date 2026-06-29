@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Brain, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Brain, Eye, EyeOff, Mail, Lock, User, AlertCircle, CheckCircle } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useDarkMode } from "../context/DarkModeContext";
+import { useNotification } from "../context/NotificationContext";
 
 export default function Signup({ setIsLoggedIn }) {
+  const { isDarkMode } = useDarkMode();
   const navigate = useNavigate();
+  const { addNotification } = useNotification();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [formData, setFormData] = useState({
@@ -15,20 +19,93 @@ export default function Signup({ setIsLoggedIn }) {
     pass: "",
     confirm: "",
   });
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    pass: "",
+    confirm: "",
+    agree: "",
+  });
   const [agreed, setAgreed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  const validateForm = () => {
+    let newErrors = {
+      name: "",
+      email: "",
+      pass: "",
+      confirm: "",
+      agree: "",
+    };
+    let isValid = true;
+
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+      isValid = false;
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = "Name must be at least 2 characters";
+      isValid = false;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+      isValid = false;
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+      isValid = false;
+    }
+
+    // Password validation
+    if (!formData.pass) {
+      newErrors.pass = "Password is required";
+      isValid = false;
+    } else if (formData.pass.length < 6) {
+      newErrors.pass = "Password must be at least 6 characters";
+      isValid = false;
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.pass)) {
+      newErrors.pass = "Password must contain uppercase, lowercase, and numbers";
+      isValid = false;
+    }
+
+    // Confirm password validation
+    if (!formData.confirm) {
+      newErrors.confirm = "Please confirm your password";
+      isValid = false;
+    } else if (formData.confirm !== formData.pass) {
+      newErrors.confirm = "Passwords do not match";
+      isValid = false;
+    }
+
+    // Terms agreement validation
+    if (!agreed) {
+      newErrors.agree = "You must agree to the terms";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (formData.pass === formData.confirm && agreed && formData.pass) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        setIsLoggedIn(true);
-        navigate("/dashboard");
-      }, 1500);
+    
+    if (!validateForm()) {
+      addNotification("Please fix the errors in the form", "error");
+      return;
     }
+
+    setIsLoading(true);
+    addNotification("Creating your account...", "info");
+    
+    setTimeout(() => {
+      setIsLoading(false);
+      setIsLoggedIn(true);
+      addNotification("Account created successfully! Welcome to NeuroVoice", "success");
+      navigate("/dashboard");
+    }, 1500);
   };
 
   const bgGradient = isDarkMode
@@ -52,14 +129,14 @@ export default function Signup({ setIsLoggedIn }) {
   return (
     <div
       style={{
-        width: "100vw",
+        width: "100%",
         minHeight: "100vh",
         background: bgGradient,
         overflow: "auto",
         position: "relative",
       }}
     >
-      <Navbar isDarkMode={isDarkMode} isAuthenticated={false} />
+      <Navbar isAuthenticated={false} />
 
       <style>{`
         @keyframes soft-glow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
@@ -71,6 +148,11 @@ export default function Signup({ setIsLoggedIn }) {
         .logo-glow { opacity: 0.3; transition: all 0.3s ease; background: linear-gradient(135deg, #3b82f6, #0ea5e9) !important; }
         .logo-glow:hover { opacity: 1; background: transparent !important; animation: glow-expand 0.6s ease-out forwards; }
         .logo-glow:hover svg { animation: brain-expand 0.6s ease-out forwards; }
+        @media (max-width: 768px) {
+          .signup-container { padding: 30px 15px !important; }
+          .signup-card { border-radius: 18px !important; }
+          .signup-form { padding: 35px 20px !important; }
+        }
       `}</style>
 
       {/* Background Orbs */}
@@ -78,8 +160,8 @@ export default function Signup({ setIsLoggedIn }) {
         className="soft-glow"
         style={{
           position: "fixed",
-          width: "600px",
-          height: "600px",
+          width: "clamp(200px, 80vw, 600px)",
+          height: "clamp(200px, 80vw, 600px)",
           background: isDarkMode
             ? "radial-gradient(circle, rgba(59, 130, 246, 0.1), transparent)"
             : "radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent)",
@@ -95,8 +177,8 @@ export default function Signup({ setIsLoggedIn }) {
         className="soft-glow"
         style={{
           position: "fixed",
-          width: "500px",
-          height: "500px",
+          width: "clamp(150px, 60vw, 500px)",
+          height: "clamp(150px, 60vw, 500px)",
           background: isDarkMode
             ? "radial-gradient(circle, rgba(6, 182, 212, 0.08), transparent)"
             : "radial-gradient(circle, rgba(6, 182, 212, 0.06), transparent)",
@@ -114,8 +196,8 @@ export default function Signup({ setIsLoggedIn }) {
         className="float-slow"
         style={{
           position: "fixed",
-          width: "300px",
-          height: "300px",
+          width: "clamp(100px, 50vw, 300px)",
+          height: "clamp(100px, 50vw, 300px)",
           background: isDarkMode
             ? "radial-gradient(circle, rgba(16, 185, 129, 0.05), transparent)"
             : "radial-gradient(circle, rgba(16, 185, 129, 0.04), transparent)",
@@ -151,7 +233,7 @@ export default function Signup({ setIsLoggedIn }) {
       ))}
 
       {/* Main Container */}
-      <div
+      <div className="signup-container"
         style={{
           position: "relative",
           zIndex: 30,
@@ -159,10 +241,10 @@ export default function Signup({ setIsLoggedIn }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "40px 20px",
+          padding: "clamp(20px, 5vw, 40px)",
         }}
       >
-        <div
+        <div className="signup-card signup-form"
           style={{
             width: "100%",
             maxWidth: "520px",
@@ -170,8 +252,8 @@ export default function Signup({ setIsLoggedIn }) {
             border: isDarkMode
               ? "1px solid rgba(59, 130, 246, 0.3)"
               : "1px solid rgba(59, 130, 246, 0.2)",
-            borderRadius: "28px",
-            padding: "50px",
+            borderRadius: "clamp(18px, 5vw, 28px)",
+            padding: "clamp(30px, 5vw, 50px)",
             backdropFilter: "blur(20px)",
             boxShadow: isDarkMode
               ? "0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(148, 163, 255, 0.1)"
@@ -273,14 +355,6 @@ export default function Signup({ setIsLoggedIn }) {
                     transition: "all 0.3s ease",
                     fontWeight: "500",
                   }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "rgba(59, 130, 246, 0.8)";
-                    e.target.style.background = isDarkMode
-                      ? "rgba(30, 58, 138, 0.7)"
-                      : "rgba(59, 130, 246, 0.15)";
-                    e.target.style.boxShadow =
-                      "0 0 12px rgba(59, 130, 246, 0.2)";
-                  }}
                   onBlur={(e) => {
                     e.target.style.borderColor = inputBorder;
                     e.target.style.background = inputBg;
@@ -288,6 +362,20 @@ export default function Signup({ setIsLoggedIn }) {
                   }}
                 />
               </div>
+              {errors.name && (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  marginTop: "6px",
+                  color: "#ef4444",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                }}>
+                  <AlertCircle size={14} />
+                  {errors.name}
+                </div>
+              )}
             </div>
 
             {/* Email */}
@@ -356,6 +444,20 @@ export default function Signup({ setIsLoggedIn }) {
                   }}
                 />
               </div>
+              {errors.email && (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  marginTop: "6px",
+                  color: "#ef4444",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                }}>
+                  <AlertCircle size={14} />
+                  {errors.email}
+                </div>
+              )}
             </div>
 
             {/* Username */}
@@ -514,6 +616,20 @@ export default function Signup({ setIsLoggedIn }) {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {errors.pass && (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  marginTop: "6px",
+                  color: "#ef4444",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                }}>
+                  <AlertCircle size={14} />
+                  {errors.pass}
+                </div>
+              )}
             </div>
 
             {/* Confirm Password */}
@@ -604,13 +720,27 @@ export default function Signup({ setIsLoggedIn }) {
                   {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {errors.confirm && (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  marginTop: "6px",
+                  color: "#ef4444",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                }}>
+                  <AlertCircle size={14} />
+                  {errors.confirm}
+                </div>
+              )}
             </div>
 
             {/* Terms Checkbox */}
             <div
               style={{
                 display: "flex",
-                alignItems: "center",
+                alignItems: "flex-start",
                 marginBottom: "28px",
                 gap: "10px",
               }}
@@ -625,19 +755,37 @@ export default function Signup({ setIsLoggedIn }) {
                   borderRadius: "4px",
                   cursor: "pointer",
                   accentColor: "#3b82f6",
+                  marginTop: "2px",
+                  flexShrink: 0,
                 }}
               />
-              <label
-                style={{
-                  fontSize: "13px",
-                  color: textSecondary,
-                  cursor: "pointer",
-                  margin: "0",
-                  fontWeight: "500",
-                }}
-              >
-                I agree to Terms & Conditions
-              </label>
+              <div style={{ flex: 1 }}>
+                <label
+                  style={{
+                    fontSize: "13px",
+                    color: textSecondary,
+                    cursor: "pointer",
+                    margin: "0 0 6px 0",
+                    fontWeight: "500",
+                    display: "block",
+                  }}
+                >
+                  I agree to Terms & Conditions
+                </label>
+                {errors.agree && (
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    color: "#ef4444",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}>
+                    <AlertCircle size={14} />
+                    {errors.agree}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Submit Button */}
@@ -742,7 +890,7 @@ export default function Signup({ setIsLoggedIn }) {
           </button>
         </div>
       </div>
-      <Footer isDarkMode={isDarkMode} isAuthenticated={false} />
+      <Footer isAuthenticated={false} />
     </div>
   );
 }

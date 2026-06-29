@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { Brain, Github, Twitter, Linkedin, Mail, MapPin, Phone } from "lucide-react";
+import { useDarkMode } from "../context/DarkModeContext";
 
-export default function Footer({ isDarkMode, isAuthenticated = false }) {
+export default function Footer({ isAuthenticated = false }) {
+  const { isDarkMode } = useDarkMode();
   const textPrimary = isDarkMode ? "white" : "#0f1729";
   const textSecondary = isDarkMode ? "#93c5fd" : "#475569";
   const footerBg = isDarkMode 
@@ -47,57 +49,79 @@ export default function Footer({ isDarkMode, isAuthenticated = false }) {
     { icon: Github, link: "#", label: "GitHub" },
     { icon: Twitter, link: "#", label: "Twitter" },
     { icon: Linkedin, link: "#", label: "LinkedIn" },
-    { icon: Mail, link: "mailto:info@neurovoice.com", label: "Email" }
-  ];  return (
+    { icon: Mail, link: "mailto:info@neurovox.com", label: "Email" }
+  ];
+
+  return (
     <footer style={{
       background: footerBg,
       borderTop: footerBorder,
-      marginTop: "80px",
+      marginTop: "clamp(50px, 10vw, 80px)",
       backdropFilter: "blur(10px)",
       boxShadow: isDarkMode 
         ? "0 -4px 20px rgba(0, 0, 0, 0.2)" 
         : "0 -4px 20px rgba(59, 130, 246, 0.1)"
     }}>
-      <div style={{
+      <style>{`
+        @media (max-width: 768px) {
+          .footer-container { padding: 40px 20px 20px !important; }
+          .footer-grid { gap: 30px !important; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important; }
+          .footer-section-title { font-size: 15px !important; margin-bottom: 15px !important; }
+          .footer-section-text { font-size: 13px !important; }
+          .footer-bottom { flex-direction: column !important; text-align: center !important; gap: 15px !important; }
+          .footer-links-group { gap: 20px !important; }
+        }
+        @media (max-width: 480px) {
+          .footer-container { padding: 30px 15px 15px !important; }
+          .footer-grid { gap: 20px !important; grid-template-columns: 1fr !important; }
+          .footer-section-title { font-size: 14px !important; }
+          .footer-section-text { font-size: 12px !important; }
+          .contact-item { gap: 10px !important; }
+          .footer-bottom { gap: 10px !important; }
+          .footer-links-group { gap: 15px !important; flex-wrap: wrap !important; justify-content: center !important; }
+        }
+      `}</style>
+      <div className="footer-container" style={{
         maxWidth: "1400px",
         margin: "0 auto",
-        padding: "60px 40px 30px"
+        padding: "clamp(30px, 5vw, 60px) clamp(15px, 5vw, 40px) clamp(15px, 3vw, 30px)"
       }}>
         {/* Main Footer Content */}
-        <div style={{
+        <div className="footer-grid" style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: "40px",
-          marginBottom: "50px"
+          gap: "clamp(30px, 5vw, 40px)",
+          marginBottom: "clamp(30px, 5vw, 50px)"
         }}>
           {/* Brand Section */}
           <div>
             <div style={{
               display: "flex",
               alignItems: "center",
-              gap: "12px",
+              gap: "clamp(8px, 2vw, 12px)",
               marginBottom: "20px",
               fontWeight: "700",
-              fontSize: "18px",
+              fontSize: "clamp(16px, 4vw, 18px)",
               color: textPrimary
             }}>
               <div style={{
-                width: "35px",
-                height: "35px",
+                width: "clamp(30px, 6vw, 35px)",
+                height: "clamp(30px, 6vw, 35px)",
                 background: "linear-gradient(135deg, #3b82f6, #0ea5e9)",
                 borderRadius: "8px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)"
+                boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
+                flexShrink: 0
               }}>
-                <Brain size={20} color="white" />
+                <Brain size={18} color="white" />
               </div>
-              NeuroVoice
+              NeuroVox
             </div>
-            <p style={{
+            <p className="footer-section-text" style={{
               color: textSecondary,
-              fontSize: "14px",
+              fontSize: "clamp(13px, 2vw, 14px)",
               lineHeight: "1.6",
               marginBottom: "20px"
             }}>
@@ -106,7 +130,8 @@ export default function Footer({ isDarkMode, isAuthenticated = false }) {
             {/* Social Links */}
             <div style={{
               display: "flex",
-              gap: "15px"
+              gap: "clamp(10px, 2vw, 15px)",
+              flexWrap: "wrap"
             }}>
               {socialLinks.map((social, idx) => {
                 const Icon = social.icon;
@@ -118,8 +143,8 @@ export default function Footer({ isDarkMode, isAuthenticated = false }) {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      width: "40px",
-                      height: "40px",
+                      width: "clamp(36px, 8vw, 40px)",
+                      height: "clamp(36px, 8vw, 40px)",
                       backgroundColor: hoverColor,
                       borderRadius: "8px",
                       color: textPrimary,
@@ -137,7 +162,7 @@ export default function Footer({ isDarkMode, isAuthenticated = false }) {
                     }}
                     title={social.label}
                   >
-                    <Icon size={20} />
+                    <Icon size={18} />
                   </a>
                 );
               })}
@@ -146,9 +171,9 @@ export default function Footer({ isDarkMode, isAuthenticated = false }) {
 
           {/* Products Section */}
           <div>
-            <h3 style={{
+            <h3 className="footer-section-title" style={{
               color: textPrimary,
-              fontSize: "16px",
+              fontSize: "clamp(15px, 3vw, 16px)",
               fontWeight: "600",
               marginBottom: "20px"
             }}>
@@ -160,7 +185,7 @@ export default function Footer({ isDarkMode, isAuthenticated = false }) {
                   <Link to={item.path} style={{
                     color: textSecondary,
                     textDecoration: "none",
-                    fontSize: "14px",
+                    fontSize: "clamp(13px, 2vw, 14px)",
                     transition: "all 0.2s ease"
                   }}
                   onMouseEnter={(e) => {
@@ -178,9 +203,9 @@ export default function Footer({ isDarkMode, isAuthenticated = false }) {
 
           {/* About Section */}
           <div>
-            <h3 style={{
+            <h3 className="footer-section-title" style={{
               color: textPrimary,
-              fontSize: "16px",
+              fontSize: "clamp(15px, 3vw, 16px)",
               fontWeight: "600",
               marginBottom: "20px"
             }}>
@@ -192,7 +217,7 @@ export default function Footer({ isDarkMode, isAuthenticated = false }) {
                   <Link to={link.path} style={{
                     color: textSecondary,
                     textDecoration: "none",
-                    fontSize: "14px",
+                    fontSize: "clamp(13px, 2vw, 14px)",
                     transition: "all 0.2s ease"
                   }}
                   onMouseEnter={(e) => {
@@ -210,27 +235,27 @@ export default function Footer({ isDarkMode, isAuthenticated = false }) {
 
           {/* Contact Section */}
           <div>
-            <h3 style={{
+            <h3 className="footer-section-title" style={{
               color: textPrimary,
-              fontSize: "16px",
+              fontSize: "clamp(15px, 3vw, 16px)",
               fontWeight: "600",
               marginBottom: "20px"
             }}>
               Contact Us
             </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-              <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "clamp(12px, 2vw, 15px)" }}>
+              <div className="contact-item" style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
                 <MapPin size={18} color="#3b82f6" style={{ marginTop: "2px", flexShrink: 0 }} />
-                <span style={{ color: textSecondary, fontSize: "14px" }}>
+                <span style={{ color: textSecondary, fontSize: "clamp(13px, 2vw, 14px)", lineHeight: "1.5" }}>
                   123 Innovation Street<br />
                   Tech City, TC 12345
                 </span>
               </div>
-              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                <Phone size={18} color="#3b82f6" />
+              <div className="contact-item" style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                <Phone size={18} color="#3b82f6" style={{ flexShrink: 0 }} />
                 <a href="tel:+1234567890" style={{
                   color: textSecondary,
-                  fontSize: "14px",
+                  fontSize: "clamp(13px, 2vw, 14px)",
                   textDecoration: "none",
                   transition: "color 0.2s"
                 }}
@@ -239,17 +264,17 @@ export default function Footer({ isDarkMode, isAuthenticated = false }) {
                   +1 (234) 567-890
                 </a>
               </div>
-              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                <Mail size={18} color="#3b82f6" />
-                <a href="mailto:info@neurovoice.com" style={{
+              <div className="contact-item" style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                <Mail size={18} color="#3b82f6" style={{ flexShrink: 0 }} />
+                <a href="mailto:info@neurovox.com" style={{
                   color: textSecondary,
-                  fontSize: "14px",
+                  fontSize: "clamp(13px, 2vw, 14px)",
                   textDecoration: "none",
                   transition: "color 0.2s"
                 }}
                 onMouseEnter={(e) => e.target.style.color = "#3b82f6"}
                 onMouseLeave={(e) => e.target.style.color = textSecondary}>
-                  info@neurovoice.com
+                  info@neurovox.com
                 </a>
               </div>
             </div>
@@ -259,30 +284,32 @@ export default function Footer({ isDarkMode, isAuthenticated = false }) {
         {/* Divider */}
         <div style={{
           borderTop: footerBorder,
-          paddingTop: "30px",
-          marginTop: "20px"
+          paddingTop: "clamp(20px, 3vw, 30px)",
+          marginTop: "clamp(15px, 3vw, 20px)"
         }}>
           {/* Bottom Footer */}
-          <div style={{
+          <div className="footer-bottom" style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             flexWrap: "wrap",
-            gap: "20px"
+            gap: "clamp(15px, 3vw, 20px)"
           }}>
             <p style={{
               color: textSecondary,
-              fontSize: "13px"
+              fontSize: "clamp(12px, 2vw, 13px)"
             }}>
-              © 2026 NeuroVoice. All rights reserved.
+              © 2026 NeuroVox. All rights reserved.
             </p>
-            <div style={{
+            <div className="footer-links-group" style={{
               display: "flex",
-              gap: "30px"
+              gap: "clamp(15px, 3vw, 30px)",
+              flexWrap: "wrap",
+              justifyContent: "flex-end"
             }}>
               <Link to="#" style={{
                 color: textSecondary,
-                fontSize: "13px",
+                fontSize: "clamp(12px, 2vw, 13px)",
                 textDecoration: "none",
                 transition: "color 0.2s"
               }}
@@ -292,7 +319,7 @@ export default function Footer({ isDarkMode, isAuthenticated = false }) {
               </Link>
               <Link to="#" style={{
                 color: textSecondary,
-                fontSize: "13px",
+                fontSize: "clamp(12px, 2vw, 13px)",
                 textDecoration: "none",
                 transition: "color 0.2s"
               }}
@@ -302,7 +329,7 @@ export default function Footer({ isDarkMode, isAuthenticated = false }) {
               </Link>
               <Link to="#" style={{
                 color: textSecondary,
-                fontSize: "13px",
+                fontSize: "clamp(12px, 2vw, 13px)",
                 textDecoration: "none",
                 transition: "color 0.2s"
               }}

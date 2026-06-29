@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { Home, AlertCircle } from "lucide-react";
-import { useState } from "react";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import { useDarkMode } from "../context/DarkModeContext";
 
 export default function NotFound() {
-  const [isDarkMode] = useState(true);
+  const { isDarkMode } = useDarkMode();
 
   const bgGradient = isDarkMode
     ? "linear-gradient(135deg, #0f1729 0%, rgba(20, 45, 100, 0.8) 100%)"

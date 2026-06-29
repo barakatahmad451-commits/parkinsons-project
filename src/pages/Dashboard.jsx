@@ -11,33 +11,44 @@ import {
   TrendingUp,
   Activity,
   BarChart3,
+  ArrowRight,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useDarkMode } from "../context/DarkModeContext";
 import {
   AreaChart,
   Area,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { mockPredictionsHistory, mockAnalyticsDashboard } from "../utils/mockData";
 
-const dashboardData = [
-  { name: "Mon", patients: 24, revenue: 2400 },
-  { name: "Tue", patients: 13, revenue: 2210 },
-  { name: "Wed", patients: 20, revenue: 2290 },
-  { name: "Thu", patients: 39, revenue: 2000 },
-  { name: "Fri", patients: 48, revenue: 2181 },
-  { name: "Sat", patients: 38, revenue: 2500 },
-];
+// Generate chart data from mock predictions
+const generateChartData = () => {
+  const data = [
+    { name: "Mon", analyses: 12, healthy: 8, detected: 4 },
+    { name: "Tue", analyses: 15, healthy: 10, detected: 5 },
+    { name: "Wed", analyses: 18, healthy: 11, detected: 7 },
+    { name: "Thu", analyses: 22, healthy: 14, detected: 8 },
+    { name: "Fri", analyses: 25, healthy: 16, detected: 9 },
+    { name: "Sat", analyses: 20, healthy: 13, detected: 7 },
+  ];
+  return data;
+};
+
+const dashboardData = generateChartData();
 
 export default function Dashboard({ setIsLoggedIn }) {
+  const { isDarkMode } = useDarkMode();
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(true);
   const [hoveredStat, setHoveredStat] = useState(null);
   const [hoveredChart, setHoveredChart] = useState(null);
 
@@ -146,7 +157,7 @@ export default function Dashboard({ setIsLoggedIn }) {
       />
 
       {/* Navbar */}
-      <Navbar isDarkMode={isDarkMode} isAuthenticated={true} setIsLoggedIn={setIsLoggedIn} />
+      <Navbar isAuthenticated={true} setIsLoggedIn={setIsLoggedIn} />
 
       {/* Main Content */}
       <div
@@ -160,7 +171,7 @@ export default function Dashboard({ setIsLoggedIn }) {
         }}
       >
         {/* Content */}
-        <div style={{ flex: 1, padding: "30px 40px", overflowY: "auto", maxWidth: "1400px", margin: "0 auto", width: "100%" }}>
+        <div style={{ flex: 1, padding: "clamp(20px, 4vw, 30px) clamp(16px, 3vw, 40px)", overflowY: "auto", maxWidth: "1400px", margin: "0 auto", width: "100%" }}>
           {/* Stats Grid */}
           <div
             style={{
@@ -172,28 +183,32 @@ export default function Dashboard({ setIsLoggedIn }) {
           >
             {[
               {
-                icon: Heart,
-                label: "Active Patients",
-                value: "1,234",
-                color: "#ec4899",
+                icon: Brain,
+                label: "Total Analyses",
+                value: mockAnalyticsDashboard.totalAnalyses,
+                color: "#3b82f6",
+                unit: "",
               },
               {
-                icon: TrendingUp,
-                label: "Monthly Revenue",
-                value: "$45,230",
+                icon: Heart,
+                label: "Avg Confidence",
+                value: mockAnalyticsDashboard.averageConfidence,
                 color: "#10b981",
+                unit: "%",
               },
               {
                 icon: Activity,
-                label: "Consultations",
-                value: "892",
-                color: "#3b82f6",
+                label: "Healthy Cases",
+                value: mockAnalyticsDashboard.severityDistribution.find(s => s.status === 'Healthy')?.count || 0,
+                color: "#10b981",
+                unit: "",
               },
               {
-                icon: BarChart3,
-                label: "Avg Rating",
-                value: "4.8★",
-                color: "#f59e0b",
+                icon: TrendingUp,
+                label: "Risk Cases",
+                value: (mockAnalyticsDashboard.severityDistribution.find(s => s.status === 'Moderate')?.count || 0) + (mockAnalyticsDashboard.severityDistribution.find(s => s.status === 'Severe')?.count || 0),
+                color: "#ef4444",
+                unit: "",
               },
             ].map((stat, i) => (
               <div
@@ -230,7 +245,7 @@ export default function Dashboard({ setIsLoggedIn }) {
                     style={{
                       width: "40px",
                       height: "40px",
-                      background: `rgba(${stat.color === "#ec4899" ? "236, 72, 153" : stat.color === "#10b981" ? "16, 185, 129" : stat.color === "#3b82f6" ? "59, 130, 246" : "245, 158, 11"}, 0.1)`,
+                      background: `${stat.color}20`,
                       borderRadius: "10px",
                       display: "flex",
                       alignItems: "center",
@@ -257,21 +272,22 @@ export default function Dashboard({ setIsLoggedIn }) {
                     margin: "0",
                   }}
                 >
-                  {stat.value}
+                  {stat.value}{stat.unit}
                 </h3>
               </div>
             ))}
           </div>
 
-          {/* Charts */}
+          {/* Charts & Recent */}
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
               gap: "20px",
+              marginBottom: "30px",
             }}
           >
-            {/* Area Chart */}
+            {/* Line Chart - Analyses Trend */}
             <div
               className="chart-container"
               style={{
@@ -293,22 +309,10 @@ export default function Dashboard({ setIsLoggedIn }) {
                   margin: "0 0 20px 0",
                 }}
               >
-                Patient Visits
+                Weekly Analysis Trend
               </h3>
               <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={dashboardData}>
-                  <defs>
-                    <linearGradient
-                      id="colorPatients"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
+                <LineChart data={dashboardData}>
                   <CartesianGrid
                     strokeDasharray="3 3"
                     stroke={
@@ -329,19 +333,25 @@ export default function Dashboard({ setIsLoggedIn }) {
                       color: textPrimary,
                     }}
                   />
-                  <Area
+                  <Line
                     type="monotone"
-                    dataKey="patients"
+                    dataKey="analyses"
                     stroke="#3b82f6"
                     strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorPatients)"
+                    dot={{ fill: "#3b82f6", r: 4 }}
                   />
-                </AreaChart>
+                  <Line
+                    type="monotone"
+                    dataKey="detected"
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                    dot={{ fill: "#ef4444", r: 4 }}
+                  />
+                </LineChart>
               </ResponsiveContainer>
             </div>
 
-            {/* Bar Chart */}
+            {/* Bar Chart - Severity Distribution */}
             <div
               className="chart-container"
               style={{
@@ -363,38 +373,192 @@ export default function Dashboard({ setIsLoggedIn }) {
                   margin: "0 0 20px 0",
                 }}
               >
-                Revenue
+                Case Distribution
               </h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={dashboardData}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke={
-                      isDarkMode
-                        ? "rgba(59, 130, 246, 0.2)"
-                        : "rgba(59, 130, 246, 0.15)"
-                    }
-                  />
-                  <XAxis dataKey="name" stroke={textSecondary} />
-                  <YAxis stroke={textSecondary} />
-                  <Tooltip
-                    contentStyle={{
-                      background: isDarkMode
-                        ? "rgba(15, 23, 42, 0.9)"
-                        : "rgba(255, 255, 255, 0.9)",
-                      border: `1px solid ${isDarkMode ? "rgba(59, 130, 246, 0.3)" : "rgba(59, 130, 246, 0.2)"}`,
-                      borderRadius: "8px",
-                      color: textPrimary,
-                    }}
-                  />
-                  <Bar dataKey="revenue" fill="#0ea5e9" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-end",
+                  justifyContent: "space-around",
+                  height: "250px",
+                  gap: "12px",
+                }}
+              >
+                {[
+                  { label: "Healthy", value: mockAnalyticsDashboard.severityDistribution.healthy, color: "#10b981" },
+                  { label: "Early", value: mockAnalyticsDashboard.severityDistribution.early, color: "#f59e0b" },
+                  { label: "Moderate", value: mockAnalyticsDashboard.severityDistribution.moderate, color: "#ff7f50" },
+                  { label: "Severe", value: mockAnalyticsDashboard.severityDistribution.severe, color: "#ef4444" },
+                ].map((item, i) => {
+                  const maxValue = Math.max(
+                    mockAnalyticsDashboard.severityDistribution.healthy,
+                    mockAnalyticsDashboard.severityDistribution.early,
+                    mockAnalyticsDashboard.severityDistribution.moderate,
+                    mockAnalyticsDashboard.severityDistribution.severe
+                  );
+                  const heightPercent = (item.value / maxValue) * 100;
+                  return (
+                    <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                      <div
+                        style={{
+                          width: "50px",
+                          height: "200px",
+                          backgroundColor: `${item.color}30`,
+                          borderRadius: "8px 8px 0 0",
+                          border: `2px solid ${item.color}`,
+                          position: "relative",
+                          display: "flex",
+                          alignItems: "flex-end",
+                          justifyContent: "center",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "100%",
+                            height: `${heightPercent}%`,
+                            backgroundColor: item.color,
+                            borderRadius: "6px 6px 0 0",
+                            transition: "height 0.3s ease",
+                          }}
+                        />
+                      </div>
+                      <span style={{ fontSize: "11px", color: textSecondary, fontWeight: "600" }}>
+                        {item.label}
+                      </span>
+                      <span style={{ fontSize: "14px", fontWeight: "700", color: textPrimary }}>
+                        {item.value}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
+          </div>
+
+          {/* Recent Predictions */}
+          <div
+            style={{
+              background: cardBg,
+              border: cardBorder,
+              borderRadius: "16px",
+              padding: "24px",
+              backdropFilter: "blur(10px)",
+              zIndex: 5,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "20px",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  color: textPrimary,
+                  margin: 0,
+                }}
+              >
+                Recent Analyses
+              </h3>
+              <Link
+                to="/my-reports"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  color: "#3b82f6",
+                  textDecoration: "none",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.gap = "10px";
+                  e.currentTarget.style.color = "#2563eb";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.gap = "6px";
+                  e.currentTarget.style.color = "#3b82f6";
+                }}
+              >
+                View All <ArrowRight size={14} />
+              </Link>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+              }}
+            >
+              {mockPredictionsHistory.slice(0, 5).map((prediction, i) => {
+                const statusColors = {
+                  Healthy: "#10b981",
+                  "Early Parkinson's": "#f59e0b",
+                  Moderate: "#ff7f50",
+                  Severe: "#ef4444",
+                };
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "12px",
+                      backgroundColor: isDarkMode ? "rgba(59, 130, 246, 0.05)" : "rgba(59, 130, 246, 0.03)",
+                      borderRadius: "8px",
+                      borderLeft: `3px solid ${statusColors[prediction.status] || "#3b82f6"}`,
+                    }}
+                  >
+                    <div>
+                      <h4 style={{ fontSize: "13px", fontWeight: "600", color: textPrimary, margin: "0 0 4px 0" }}>
+                        {prediction.status}
+                      </h4>
+                      <p style={{ fontSize: "12px", color: textSecondary, margin: 0 }}>
+                        {prediction.date} at {prediction.time}
+                      </p>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <span style={{ fontSize: "14px", fontWeight: "700", color: textPrimary }}>
+                        {prediction.confidence}%
+                      </span>
+                      <p style={{ fontSize: "11px", color: textSecondary, margin: "4px 0 0 0" }}>
+                        Confidence
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <Link
+              to="/new-analysis"
+              style={{
+                display: "inline-block",
+                marginTop: "16px",
+                backgroundColor: "#3b82f6",
+                color: "white",
+                padding: "10px 20px",
+                borderRadius: "8px",
+                textDecoration: "none",
+                fontSize: "13px",
+                fontWeight: "600",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2563eb")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3b82f6")}
+            >
+              Start New Analysis
+            </Link>
           </div>
         </div>
       </div>
-      <Footer isDarkMode={isDarkMode} isAuthenticated={true} />
+      <Footer isAuthenticated={true} />
     </div>
   );
 }

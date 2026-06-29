@@ -1,9 +1,9 @@
-import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useDarkMode } from "../context/DarkModeContext";
 
 export default function About() {
-  const [isDarkMode] = useState(true);
+  const { isDarkMode } = useDarkMode();
 
   const bgGradient = isDarkMode
     ? "linear-gradient(135deg, #0f1729 0%, rgba(20, 45, 100, 0.8) 100%)"
@@ -14,11 +14,27 @@ export default function About() {
 
   return (
     <div style={{ background: bgGradient, minHeight: "100vh" }}>
-      <Navbar isDarkMode={isDarkMode} />
+      <Navbar />
+      <style>{`
+        @media (max-width: 768px) {
+          .about-container { padding: 40px 20px !important; }
+          .about-title { font-size: 28px !important; }
+          .about-section-title { font-size: 20px !important; }
+          .about-section { padding: 25px !important; margin-bottom: 25px !important; }
+          .about-text { font-size: 14px !important; }
+        }
+        @media (max-width: 480px) {
+          .about-container { padding: 30px 15px !important; }
+          .about-title { font-size: 24px !important; }
+          .about-section-title { font-size: 18px !important; }
+          .about-section { padding: 20px !important; margin-bottom: 20px !important; }
+          .about-text { font-size: 13px !important; }
+        }
+      `}</style>
       
-      <div style={{ padding: "60px 40px", maxWidth: "1000px", margin: "0 auto" }}>
-        <h1 style={{ fontSize: "36px", fontWeight: "bold", color: textPrimary, marginBottom: "30px" }}>
-          About NeuroVoice
+      <div className="about-container" style={{ padding: "clamp(30px, 5vw, 60px) clamp(16px, 3vw, 40px)", maxWidth: "1000px", margin: "0 auto" }}>
+        <h1 className="about-title" style={{ fontSize: "clamp(28px, 6vw, 36px)", fontWeight: "bold", color: textPrimary, marginBottom: "clamp(20px, 5vw, 30px)", lineHeight: "1.2" }}>
+          About NeuroVox
         </h1>
 
         <div style={{ 
@@ -32,7 +48,7 @@ export default function About() {
             Our Mission
           </h2>
           <p style={{ color: textSecondary, lineHeight: "1.8", fontSize: "16px" }}>
-            NeuroVoice aims to revolutionize neurological health screening through advanced voice analysis technology. 
+            NeuroVox aims to revolutionize neurological health screening through advanced voice analysis technology. 
             We believe that early detection and continuous monitoring can significantly improve quality of life for individuals 
             with neurological conditions.
           </p>
@@ -54,7 +70,7 @@ export default function About() {
           </p>
         </div>
       </div>
-      <Footer isDarkMode={isDarkMode} isAuthenticated={false} />
+      <Footer isAuthenticated={false} />
     </div>
   );
 }

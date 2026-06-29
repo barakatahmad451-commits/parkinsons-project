@@ -1,9 +1,9 @@
-import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useDarkMode } from "../context/DarkModeContext";
 
 export default function Technology() {
-  const [isDarkMode] = useState(true);
+  const { isDarkMode } = useDarkMode();
 
   const bgGradient = isDarkMode
     ? "linear-gradient(135deg, #0f1729 0%, rgba(20, 45, 100, 0.8) 100%)"
@@ -33,10 +33,17 @@ export default function Technology() {
 
   return (
     <div style={{ background: bgGradient, minHeight: "100vh" }}>
-      <Navbar isDarkMode={isDarkMode} />
+      <Navbar />
+      <style>{`
+        @media (max-width: 768px) {
+          .tech-container { padding: 40px 20px !important; }
+          .tech-title { font-size: 28px !important; }
+          .tech-grid { gap: 20px !important; }
+        }
+      `}</style>
       
-      <div style={{ padding: "60px 40px", maxWidth: "1000px", margin: "0 auto" }}>
-        <h1 style={{ fontSize: "36px", fontWeight: "bold", color: textPrimary, marginBottom: "40px" }}>
+      <div className="tech-container" style={{ padding: "clamp(30px, 5vw, 60px) clamp(16px, 3vw, 40px)", maxWidth: "1000px", margin: "0 auto" }}>
+        <h1 className="tech-title" style={{ fontSize: "clamp(28px, 6vw, 36px)", fontWeight: "bold", color: textPrimary, marginBottom: "clamp(25px, 5vw, 40px)" }}>
           Our Technology
         </h1>
 
@@ -58,7 +65,7 @@ export default function Technology() {
           ))}
         </div>
       </div>
-      <Footer isDarkMode={isDarkMode} isAuthenticated={false} />
+      <Footer isAuthenticated={false} />
     </div>
   );
 }

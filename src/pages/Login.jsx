@@ -1,22 +1,62 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Brain, Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Brain, Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useDarkMode } from "../context/DarkModeContext";
+import { useNotification } from "../context/NotificationContext";
 
 export default function Login({ setIsLoggedIn }) {
   const [showPassword, setShowPassword] = useState(false);
   const [inputValue, setInputValue] = useState({ user: "", pass: "" });
   const [isLoading, setIsLoading] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [errors, setErrors] = useState({ user: "", pass: "" });
+  const { isDarkMode } = useDarkMode();
   const navigate = useNavigate();
+  const { addNotification } = useNotification();
+
+  const validateForm = () => {
+    let newErrors = { user: "", pass: "" };
+    let isValid = true;
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!inputValue.user.trim()) {
+      newErrors.user = "Email is required";
+      isValid = false;
+    } else if (!emailRegex.test(inputValue.user)) {
+      newErrors.user = "Please enter a valid email address";
+      isValid = false;
+    }
+
+    // Password validation
+    if (!inputValue.pass) {
+      newErrors.pass = "Password is required";
+      isValid = false;
+    } else if (inputValue.pass.length < 6) {
+      newErrors.pass = "Password must be at least 6 characters";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleLogin = (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      addNotification("Please fix the errors in the form", "error");
+      return;
+    }
+
     setIsLoading(true);
+    addNotification("Logging in...", "info");
+    
     setTimeout(() => {
       setIsLoading(false);
       setIsLoggedIn(true);
+      addNotification("Login successful! Welcome back", "success");
       navigate("/dashboard");
     }, 1500);
   };
@@ -53,7 +93,7 @@ export default function Login({ setIsLoggedIn }) {
         position: "relative",
       }}
     >
-      <Navbar isDarkMode={isDarkMode} isAuthenticated={false} />
+      <Navbar isAuthenticated={false} />
 
       <style>{`
         @keyframes soft-glow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
@@ -65,6 +105,28 @@ export default function Login({ setIsLoggedIn }) {
         .logo-glow { opacity: 0.3; transition: all 0.3s ease; background: linear-gradient(135deg, #3b82f6, #0ea5e9) !important; }
         .logo-glow:hover { opacity: 1; background: transparent !important; animation: glow-expand 0.6s ease-out forwards; }
         .logo-glow:hover svg { animation: brain-expand 0.6s ease-out forwards; }
+        @media (max-width: 768px) {
+          .login-grid { grid-template-columns: 1fr !important; }
+          .login-right { display: none !important; }
+          .login-left { padding: 40px 20px !important; border-right: none !important; }
+          .form-title { font-size: 24px !important; }
+          .form-subtitle { font-size: 13px !important; }
+          .logo-box { width: 60px !important; height: 60px !important; margin-bottom: 15px !important; }
+          .logo-box svg { width: 32px !important; height: 32px !important; }
+          .form-button { padding: 11px 16px !important; font-size: 14px !important; }
+          .form-input { padding: 10px 10px 10px 36px !important; font-size: 13px !important; }
+        }
+        @media (max-width: 480px) {
+          .login-container { padding: 30px 15px !important; }
+          .login-card { border-radius: 20px !important; }
+          .login-left { padding: 30px 16px !important; }
+          .form-title { font-size: 22px !important; }
+          .form-label { font-size: 12px !important; }
+          .form-subtitle { font-size: 12px !important; }
+          .logo-box { width: 55px !important; height: 55px !important; }
+          .form-button { padding: 10px 14px !important; font-size: 13px !important; }
+          .form-input { padding: 9px 9px 9px 34px !important; font-size: 12px !important; }
+        }
       `}</style>
 
       {/* Background Orbs */}
@@ -145,7 +207,7 @@ export default function Login({ setIsLoggedIn }) {
       ))}
 
       {/* Main Container */}
-      <div
+      <div className="login-container"
         style={{
           position: "relative",
           zIndex: 30,
@@ -153,14 +215,14 @@ export default function Login({ setIsLoggedIn }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "40px 20px",
+          padding: "clamp(20px, 5vw, 40px)",
         }}
       >
-        <div
+        <div className="login-card"
           style={{
             background: cardBg,
             border: cardBorder,
-            borderRadius: "28px",
+            borderRadius: "clamp(18px, 5vw, 28px)",
             padding: "0",
             backdropFilter: "blur(20px)",
             boxShadow: isDarkMode
@@ -171,16 +233,16 @@ export default function Login({ setIsLoggedIn }) {
             maxWidth: "900px",
           }}
         >
-          <div
+          <div className="login-grid"
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
             }}
           >
             {/* LEFT SECTION - Form */}
-            <div
+            <div className="login-left"
               style={{
-                padding: "50px 45px",
+                padding: "clamp(30px, 5vw, 50px) clamp(20px, 5vw, 45px)",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
@@ -193,8 +255,8 @@ export default function Login({ setIsLoggedIn }) {
               }}
             >
               {/* Header */}
-              <div style={{ marginBottom: "40px" }}>
-                <div
+              <div style={{ marginBottom: "clamp(25px, 5vw, 40px)" }}>
+                <div className="logo-box"
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -209,19 +271,20 @@ export default function Login({ setIsLoggedIn }) {
                 >
                   <Brain size={36} color="white" strokeWidth={1.5} />
                 </div>
-                <h2
+                <h2 className="form-title"
                   style={{
-                    fontSize: "32px",
+                    fontSize: "clamp(24px, 5vw, 32px)",
                     fontWeight: "700",
                     color: textPrimary,
                     margin: "0 0 10px 0",
+                    lineHeight: "1.2"
                   }}
                 >
                   Welcome Back
                 </h2>
-                <p
+                <p className="form-subtitle"
                   style={{
-                    fontSize: "14px",
+                    fontSize: "clamp(12px, 2vw, 14px)",
                     color: textSecondary,
                     margin: "0",
                     fontWeight: "500",
@@ -242,7 +305,7 @@ export default function Login({ setIsLoggedIn }) {
                 >
                   <label
                     style={{
-                      fontSize: "13px",
+                      fontSize: "clamp(11px, 2vw, 13px)",
                       fontWeight: "600",
                       color: "#3b82f6",
                       display: "block",
@@ -276,10 +339,11 @@ export default function Login({ setIsLoggedIn }) {
                       onChange={(e) =>
                         setInputValue({ ...inputValue, user: e.target.value })
                       }
+                      className="form-input"
                       style={{
                         width: "100%",
-                        padding: "12px 12px 12px 40px",
-                        fontSize: "14px",
+                        padding: "clamp(9px, 2vw, 12px) clamp(9px, 2vw, 12px) clamp(9px, 2vw, 12px) clamp(32px, 5vw, 40px)",
+                        fontSize: "clamp(12px, 2vw, 14px)",
                         background: inputBg,
                         border: `1px solid ${inputBorder}`,
                         borderRadius: "12px",
@@ -304,6 +368,20 @@ export default function Login({ setIsLoggedIn }) {
                       }}
                     />
                   </div>
+                  {errors.user && (
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      marginTop: "8px",
+                      color: "#ef4444",
+                      fontSize: "12px",
+                      fontWeight: "500",
+                    }}>
+                      <AlertCircle size={14} />
+                      {errors.user}
+                    </div>
+                  )}
                 </div>
 
                 {/* Password */}
@@ -323,7 +401,7 @@ export default function Login({ setIsLoggedIn }) {
                   >
                     <label
                       style={{
-                        fontSize: "13px",
+                        fontSize: "clamp(11px, 2vw, 13px)",
                         fontWeight: "600",
                         color: "#3b82f6",
                         textTransform: "uppercase",
@@ -370,10 +448,11 @@ export default function Login({ setIsLoggedIn }) {
                       onChange={(e) =>
                         setInputValue({ ...inputValue, pass: e.target.value })
                       }
+                      className="form-input"
                       style={{
                         width: "100%",
-                        padding: "12px 40px 12px 40px",
-                        fontSize: "14px",
+                        padding: "clamp(9px, 2vw, 12px) clamp(32px, 5vw, 40px)",
+                        fontSize: "clamp(12px, 2vw, 14px)",
                         background: inputBg,
                         border: `1px solid ${inputBorder}`,
                         borderRadius: "12px",
@@ -424,16 +503,31 @@ export default function Login({ setIsLoggedIn }) {
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
+                  {errors.pass && (
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      marginTop: "8px",
+                      color: "#ef4444",
+                      fontSize: "12px",
+                      fontWeight: "500",
+                    }}>
+                      <AlertCircle size={14} />
+                      {errors.pass}
+                    </div>
+                  )}
                 </div>
 
                 {/* Login Button */}
                 <button
                   type="submit"
                   disabled={isLoading}
+                  className="form-button"
                   style={{
                     width: "100%",
-                    padding: "13px 20px",
-                    fontSize: "15px",
+                    padding: "clamp(10px, 2vw, 13px) clamp(16px, 3vw, 20px)",
+                    fontSize: "clamp(13px, 2vw, 15px)",
                     fontWeight: "700",
                     background: isLoading
                       ? "linear-gradient(135deg, #94a3b8, #64748b)"
@@ -468,10 +562,10 @@ export default function Login({ setIsLoggedIn }) {
               </form>
 
               {/* Footer */}
-              <div style={{ marginTop: "28px", textAlign: "center" }}>
+              <div style={{ marginTop: "clamp(20px, 3vw, 28px)", textAlign: "center" }}>
                 <p
                   style={{
-                    fontSize: "13px",
+                    fontSize: "clamp(12px, 2vw, 13px)",
                     color: textSecondary,
                     margin: "0",
                     fontWeight: "500",
@@ -496,7 +590,7 @@ export default function Login({ setIsLoggedIn }) {
             </div>
 
             {/* RIGHT SECTION - Brand */}
-            <div
+            <div className="login-right"
               style={{
                 padding: "50px 45px",
                 display: "flex",
@@ -563,7 +657,7 @@ export default function Login({ setIsLoggedIn }) {
                     margin: "0 0 12px 0",
                   }}
                 >
-                  NeuroVex
+                  NeuroVox
                 </h3>
                 <p
                   style={{
@@ -652,7 +746,7 @@ export default function Login({ setIsLoggedIn }) {
           </div>
         </div>
       </div>
-      <Footer isDarkMode={isDarkMode} isAuthenticated={false} />
+      <Footer isAuthenticated={false} />
     </div>
   );
 }

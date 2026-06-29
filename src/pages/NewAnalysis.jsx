@@ -1,16 +1,25 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Mic, Upload, Zap, CheckCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Mic, Upload, Zap, ArrowLeft } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useDarkMode } from "../context/DarkModeContext";
+import { useNotification } from "../context/NotificationContext";
+import { VoiceRecorder } from "../components/VoiceRecorder";
+import { VoiceUpload } from "../components/VoiceUpload";
+import { AudioAnalysisSimulation } from "../components/AudioAnalysisSimulation";
+import { PredictionResults } from "../components/PredictionResults";
+import { mockPredictionsHistory, generateMockFullReport } from "../utils/mockData";
 
 export default function NewAnalysis({ setIsLoggedIn }) {
-  const [isDarkMode] = useState(true);
-  const [mode, setMode] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [analysisComplete, setAnalysisComplete] = useState(false);
-  const [audioFile, setAudioFile] = useState(null);
+  const { isDarkMode } = useDarkMode();
   const navigate = useNavigate();
+  const { addNotification } = useNotification();
+  
+  const [mode, setMode] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [prediction, setPrediction] = useState(null);
+  const [audioFile, setAudioFile] = useState(null);
 
   const bgGradient = isDarkMode
     ? "linear-gradient(135deg, #0f1729 0%, rgba(20, 45, 100, 0.8) 100%)"
@@ -21,379 +30,271 @@ export default function NewAnalysis({ setIsLoggedIn }) {
   const cardBg = isDarkMode ? "rgba(30, 58, 138, 0.5)" : "rgba(255, 255, 255, 0.8)";
   const cardBorder = isDarkMode ? "1px solid rgba(59, 130, 246, 0.3)" : "1px solid rgba(59, 130, 246, 0.2)";
 
-  const handleRecordStart = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setAnalysisComplete(true);
-    }, 3000);
+  const handleRecordingComplete = (audioBlob) => {
+    setAudioFile(audioBlob);
+    startAnalysis(audioBlob);
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setAudioFile(file.name);
-      setIsProcessing(true);
-      setTimeout(() => {
-        setIsProcessing(false);
-        setAnalysisComplete(true);
-      }, 2500);
-    }
+  const handleFileSelected = (file) => {
+    setAudioFile(file);
+    startAnalysis(file);
   };
 
-  const handleReset = () => {
+  const startAnalysis = (file) => {
+    setIsAnalyzing(true);
+    addNotification("Starting voice analysis...", "info");
+  };
+
+  const handleAnalysisComplete = (predictionData) => {
+    setPrediction(predictionData);
+    setIsAnalyzing(false);
+    addNotification(`Analysis complete! Status: ${predictionData.status}`, "success");
+    
+    // Save to mock history
+    const newRecord = {
+      id: mockPredictionsHistory.length + 1,
+      date: new Date().toISOString().split('T')[0],
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      ...predictionData,
+    };
+    mockPredictionsHistory.unshift(newRecord);
+  };
+
+  const handleDownloadReport = () => {
+    const reportContent = generateMockFullReport(prediction);
+    const element = document.createElement('a');
+    const file = new Blob([reportContent], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `PD-Analysis-Report-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    addNotification("Report downloaded successfully!", "success");
+  };
+
+  const handleViewFullReport = () => {
+    navigate("/my-reports");
+    addNotification("Opening reports...", "info");
+  };
+
+  const handleNewAnalysis = () => {
     setMode(null);
-    setAnalysisComplete(false);
+    setPrediction(null);
     setAudioFile(null);
-    setIsProcessing(false);
+    setIsAnalyzing(false);
   };
+
+  const modeOptions = [
+    {
+      key: "record",
+      title: "Record Voice",
+      description: "Record your voice directly using your microphone.",
+      icon: Mic,
+      color: "#3b82f6",
+      buttonText: "Start Recording",
+    },
+    {
+      key: "upload",
+      title: "Upload Audio",
+      description: "Upload a pre-recorded audio file (WAV, MP3, FLAC).",
+      icon: Upload,
+      color: "#10b981",
+      buttonText: "Browse Files",
+    },
+    {
+      key: "quicktest",
+      title: "Quick Test",
+      description: "Use sample data for instant demonstration.",
+      icon: Zap,
+      color: "#f59e0b",
+      buttonText: "Run Demo",
+    },
+  ];
 
   return (
-    <div style={{ background: bgGradient, minHeight: "100vh" }}>
-      <Navbar isDarkMode={isDarkMode} isAuthenticated={true} setIsLoggedIn={setIsLoggedIn} />
+    <div style={{ background: bgGradient, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <Navbar isAuthenticated={true} setIsLoggedIn={setIsLoggedIn} />
 
-      <div style={{ padding: "60px 40px", maxWidth: "1200px", margin: "0 auto" }}>
-        <h1 style={{ fontSize: "36px", fontWeight: "bold", color: textPrimary, marginBottom: "40px", textAlign: "center" }}>
-          Start New Analysis
-        </h1>
+      <div style={{ flex: 1, padding: "clamp(30px, 5vw, 60px) clamp(16px, 3vw, 40px)", maxWidth: "1000px", margin: "0 auto", width: "100%" }}>
+        {/* Header with Back Button */}
+        {(mode || prediction) && (
+          <button
+            onClick={prediction ? handleNewAnalysis : () => setMode(null)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              backgroundColor: "transparent",
+              border: "none",
+              color: "#3b82f6",
+              fontSize: "14px",
+              fontWeight: "600",
+              cursor: "pointer",
+              marginBottom: "20px",
+              transition: "all 0.3s ease",
+              padding: "8px 0",
+            }}
+            onMouseEnter={(e) => (e.target.style.color = "#2563eb")}
+            onMouseLeave={(e) => (e.target.style.color = "#3b82f6")}
+          >
+            <ArrowLeft size={18} />
+            {prediction ? "New Analysis" : "Back"}
+          </button>
+        )}
 
-        {!mode ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "30px" }}>
-            {/* Record Option */}
-            <div
-              onClick={() => setMode("record")}
-              style={{
-                backgroundColor: cardBg,
-                border: cardBorder,
-                padding: "40px",
-                borderRadius: "12px",
-                textAlign: "center",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-8px)";
-                e.currentTarget.style.boxShadow = isDarkMode 
-                  ? "0 20px 40px rgba(59, 130, 246, 0.3)" 
-                  : "0 20px 40px rgba(59, 130, 246, 0.2)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
-              <Mic size={64} color="#3b82f6" style={{ margin: "0 auto 20px" }} />
-              <h2 style={{ fontSize: "24px", fontWeight: "600", color: textPrimary, marginBottom: "12px" }}>
-                Record Voice
-              </h2>
-              <p style={{ color: textSecondary, marginBottom: "20px" }}>
-                Record your voice directly. Takes 1-2 minutes.
-              </p>
-              <div style={{
-                backgroundColor: "#3b82f6",
-                color: "white",
-                padding: "10px 20px",
-                borderRadius: "8px",
-                fontWeight: "600",
-                display: "inline-block"
-              }}>
-                Start Recording
-              </div>
+        {/* Main Content */}
+        {!mode && !prediction ? (
+          // Mode Selection Screen
+          <>
+            <h1 style={{ fontSize: "clamp(28px, 6vw, 40px)", fontWeight: "700", color: textPrimary, marginBottom: "12px", textAlign: "center", margin: "0 0 12px 0" }}>
+              Start Voice Analysis
+            </h1>
+            <p style={{ fontSize: "16px", color: textSecondary, textAlign: "center", marginBottom: "40px" }}>
+              Choose how you'd like to analyze your voice
+            </p>
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: "24px",
+            }}>
+              {modeOptions.map((option) => {
+                const IconComponent = option.icon;
+                return (
+                  <div
+                    key={option.key}
+                    onClick={() => setMode(option.key)}
+                    style={{
+                      backgroundColor: cardBg,
+                      border: cardBorder,
+                      padding: "32px 24px",
+                      borderRadius: "12px",
+                      textAlign: "center",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-8px)";
+                      e.currentTarget.style.boxShadow = isDarkMode 
+                        ? "0 20px 40px rgba(59, 130, 246, 0.3)" 
+                        : "0 20px 40px rgba(59, 130, 246, 0.2)";
+                      e.currentTarget.style.borderColor = option.color;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "none";
+                      e.currentTarget.style.borderColor = cardBorder.split(" ")[0];
+                    }}
+                  >
+                    <IconComponent size={56} color={option.color} style={{ margin: "0 auto 16px", display: "block" }} />
+                    <h2 style={{ fontSize: "20px", fontWeight: "700", color: textPrimary, margin: "0 0 8px 0" }}>
+                      {option.title}
+                    </h2>
+                    <p style={{ fontSize: "13px", color: textSecondary, margin: "0 0 20px 0" }}>
+                      {option.description}
+                    </p>
+                    <div style={{
+                      display: "inline-block",
+                      backgroundColor: option.color,
+                      color: "white",
+                      padding: "10px 24px",
+                      borderRadius: "8px",
+                      fontWeight: "600",
+                      fontSize: "13px",
+                    }}>
+                      {option.buttonText}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-
-            {/* Upload Option */}
-            <div
-              onClick={() => setMode("upload")}
-              style={{
-                backgroundColor: cardBg,
-                border: cardBorder,
-                padding: "40px",
-                borderRadius: "12px",
-                textAlign: "center",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-8px)";
-                e.currentTarget.style.boxShadow = isDarkMode 
-                  ? "0 20px 40px rgba(59, 130, 246, 0.3)" 
-                  : "0 20px 40px rgba(59, 130, 246, 0.2)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
-              <Upload size={64} color="#10b981" style={{ margin: "0 auto 20px" }} />
-              <h2 style={{ fontSize: "24px", fontWeight: "600", color: textPrimary, marginBottom: "12px" }}>
-                Upload Audio
-              </h2>
-              <p style={{ color: textSecondary, marginBottom: "20px" }}>
-                Upload pre-recorded audio file.
-              </p>
-              <div style={{
-                backgroundColor: "#10b981",
-                color: "white",
-                padding: "10px 20px",
-                borderRadius: "8px",
-                fontWeight: "600",
-                display: "inline-block"
-              }}>
-                Browse Files
-              </div>
-            </div>
-
-            {/* Quick Test Option */}
-            <div
-              onClick={() => setMode("quicktest")}
-              style={{
-                backgroundColor: cardBg,
-                border: cardBorder,
-                padding: "40px",
-                borderRadius: "12px",
-                textAlign: "center",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-8px)";
-                e.currentTarget.style.boxShadow = isDarkMode 
-                  ? "0 20px 40px rgba(59, 130, 246, 0.3)" 
-                  : "0 20px 40px rgba(59, 130, 246, 0.2)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
-              <Zap size={64} color="#f59e0b" style={{ margin: "0 auto 20px" }} />
-              <h2 style={{ fontSize: "24px", fontWeight: "600", color: textPrimary, marginBottom: "12px" }}>
-                Quick Test
-              </h2>
-              <p style={{ color: textSecondary, marginBottom: "20px" }}>
-                Use sample data for instant analysis.
-              </p>
-              <div style={{
-                backgroundColor: "#f59e0b",
-                color: "white",
-                padding: "10px 20px",
-                borderRadius: "8px",
-                fontWeight: "600",
-                display: "inline-block"
-              }}>
-                Run Test
-              </div>
-            </div>
+          </>
+        ) : isAnalyzing ? (
+          // Analysis Screen
+          <div>
+            <h1 style={{ fontSize: "clamp(28px, 6vw, 40px)", fontWeight: "700", color: textPrimary, marginBottom: "40px", textAlign: "center" }}>
+              Analyzing Your Voice
+            </h1>
+            <AudioAnalysisSimulation
+              isDarkMode={isDarkMode}
+              onAnalysisComplete={handleAnalysisComplete}
+            />
           </div>
-        ) : !analysisComplete ? (
-          <div style={{
-            backgroundColor: cardBg,
-            border: cardBorder,
-            padding: "60px 40px",
-            borderRadius: "12px",
-            textAlign: "center"
-          }}>
+        ) : prediction ? (
+          // Results Screen
+          <div>
+            <h1 style={{ fontSize: "clamp(28px, 6vw, 40px)", fontWeight: "700", color: textPrimary, marginBottom: "40px", textAlign: "center" }}>
+              Analysis Results
+            </h1>
+            <PredictionResults
+              prediction={prediction}
+              isDarkMode={isDarkMode}
+              onDownload={handleDownloadReport}
+              onViewReport={handleViewFullReport}
+              onNewAnalysis={handleNewAnalysis}
+            />
+          </div>
+        ) : (
+          // Input Screen
+          <div>
+            <h1 style={{ fontSize: "clamp(28px, 6vw, 40px)", fontWeight: "700", color: textPrimary, marginBottom: "12px", textAlign: "center" }}>
+              {mode === "record" ? "Record Your Voice" : mode === "upload" ? "Upload Audio File" : "Quick Test"}
+            </h1>
+            <p style={{ fontSize: "16px", color: textSecondary, textAlign: "center", marginBottom: "40px" }}>
+              {mode === "record" ? "Record your voice sample for analysis" : mode === "upload" ? "Select an audio file to analyze" : "Running demo analysis..."}
+            </p>
+
             {mode === "record" ? (
-              <>
-                <div style={{
-                  width: "120px",
-                  height: "120px",
-                  borderRadius: "50%",
-                  backgroundColor: isProcessing ? "#ef4444" : "#3b82f6",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  margin: "0 auto 20px",
-                  animation: isProcessing ? "pulse 1.5s infinite" : "none",
-                  transition: "all 0.3s ease"
-                }}>
-                  <style>{`
-                    @keyframes pulse {
-                      0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
-                      50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
-                    }
-                  `}</style>
-                  <Mic size={60} color="white" />
-                </div>
-                <h2 style={{ fontSize: "24px", fontWeight: "600", color: textPrimary, marginBottom: "20px" }}>
-                  {isProcessing ? "Recording..." : "Ready to Record"}
-                </h2>
-                <p style={{ color: textSecondary, marginBottom: "40px" }}>
-                  {isProcessing ? "Please speak naturally about your day..." : "Click the button to start recording"}
-                </p>
-                <button
-                  onClick={handleRecordStart}
-                  disabled={isProcessing}
-                  style={{
-                    backgroundColor: isProcessing ? "#ef4444" : "#3b82f6",
-                    color: "white",
-                    padding: "16px 40px",
-                    borderRadius: "50px",
-                    border: "none",
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    cursor: isProcessing ? "not-allowed" : "pointer",
-                    marginRight: "15px"
-                  }}
-                >
-                  {isProcessing ? "Recording..." : "Start Recording"}
-                </button>
-                <button
-                  onClick={handleReset}
-                  style={{
-                    backgroundColor: "transparent",
-                    color: textSecondary,
-                    padding: "16px 40px",
-                    borderRadius: "50px",
-                    border: `2px solid ${textSecondary}`,
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    cursor: "pointer"
-                  }}
-                >
-                  Back
-                </button>
-              </>
+              <VoiceRecorder
+                onRecordingComplete={handleRecordingComplete}
+                isDarkMode={isDarkMode}
+                isProcessing={isAnalyzing}
+              />
             ) : mode === "upload" ? (
-              <>
-                <Upload size={80} color="#10b981" style={{ margin: "0 auto 20px" }} />
-                <h2 style={{ fontSize: "24px", fontWeight: "600", color: textPrimary, marginBottom: "20px" }}>
-                  Upload Audio File
-                </h2>
-                <p style={{ color: textSecondary, marginBottom: "40px" }}>
-                  Select an MP3, WAV, or OGG file
-                </p>
-                <label style={{
-                  display: "inline-block",
-                  backgroundColor: "#10b981",
-                  color: "white",
-                  padding: "16px 40px",
-                  borderRadius: "50px",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                  marginRight: "15px"
-                }}>
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    onChange={handleFileUpload}
-                    style={{ display: "none" }}
-                  />
-                  Choose File
-                </label>
-                <button
-                  onClick={handleReset}
-                  style={{
-                    backgroundColor: "transparent",
-                    color: textSecondary,
-                    padding: "16px 40px",
-                    borderRadius: "50px",
-                    border: `2px solid ${textSecondary}`,
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    cursor: "pointer"
-                  }}
-                >
-                  Back
-                </button>
-              </>
+              <VoiceUpload
+                onFileSelected={handleFileSelected}
+                isDarkMode={isDarkMode}
+                isProcessing={isAnalyzing}
+              />
             ) : (
-              <>
-                <Zap size={80} color="#f59e0b" style={{ margin: "0 auto 20px", animation: "pulse 1.5s infinite" }} />
-                <h2 style={{ fontSize: "24px", fontWeight: "600", color: textPrimary, marginBottom: "20px" }}>
-                  {isProcessing ? "Running Quick Test..." : "Quick Test Ready"}
-                </h2>
-                <p style={{ color: textSecondary, marginBottom: "40px" }}>
-                  {isProcessing ? "Analyzing sample voice data..." : "Using demo patient data"}
+              // Quick Test
+              <div style={{
+                backgroundColor: cardBg,
+                borderRadius: "12px",
+                padding: "24px",
+                border: cardBorder,
+                textAlign: "center",
+              }}>
+                <p style={{ fontSize: "16px", color: textSecondary, marginBottom: "20px" }}>
+                  Running quick test with sample data...
                 </p>
                 <button
                   onClick={() => {
-                    if (!isProcessing) {
-                      setIsProcessing(true);
-                      setTimeout(() => {
-                        setIsProcessing(false);
-                        setAnalysisComplete(true);
-                      }, 2500);
-                    }
+                    startAnalysis(null);
                   }}
-                  disabled={isProcessing}
                   style={{
-                    backgroundColor: isProcessing ? "#f59e0b" : "#f59e0b",
+                    backgroundColor: "#f59e0b",
                     color: "white",
-                    padding: "16px 40px",
-                    borderRadius: "50px",
+                    padding: "12px 32px",
+                    borderRadius: "8px",
                     border: "none",
-                    fontSize: "16px",
+                    fontSize: "14px",
                     fontWeight: "600",
-                    cursor: isProcessing ? "not-allowed" : "pointer",
-                    marginRight: "15px"
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
                   }}
+                  onMouseEnter={(e) => (e.target.style.backgroundColor = "#d97706")}
+                  onMouseLeave={(e) => (e.target.style.backgroundColor = "#f59e0b")}
                 >
-                  {isProcessing ? "Testing..." : "Run Test"}
+                  Run Demo Analysis
                 </button>
-                <button
-                  onClick={handleReset}
-                  style={{
-                    backgroundColor: "transparent",
-                    color: textSecondary,
-                    padding: "16px 40px",
-                    borderRadius: "50px",
-                    border: `2px solid ${textSecondary}`,
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    cursor: "pointer"
-                  }}
-                >
-                  Back
-                </button>
-              </>
+              </div>
             )}
-          </div>
-        ) : (
-          <div style={{
-            backgroundColor: cardBg,
-            border: cardBorder,
-            padding: "60px 40px",
-            borderRadius: "12px",
-            textAlign: "center"
-          }}>
-            <CheckCircle size={100} color="#10b981" style={{ margin: "0 auto 20px" }} />
-            <h2 style={{ fontSize: "28px", fontWeight: "600", color: textPrimary, marginBottom: "15px" }}>
-              Analysis Complete!
-            </h2>
-            <p style={{ color: textSecondary, marginBottom: "40px" }}>
-              Your voice analysis has been processed successfully. View the detailed report in My Reports.
-            </p>
-            <Link to="/my-reports" style={{
-              display: "inline-block",
-              backgroundColor: "#3b82f6",
-              color: "white",
-              padding: "14px 35px",
-              borderRadius: "8px",
-              textDecoration: "none",
-              fontWeight: "600",
-              marginRight: "15px"
-            }}>
-              View Report
-            </Link>
-            <button
-              onClick={handleReset}
-              style={{
-                backgroundColor: "transparent",
-                color: "#3b82f6",
-                padding: "14px 35px",
-                borderRadius: "8px",
-                border: "2px solid #3b82f6",
-                fontWeight: "600",
-                cursor: "pointer"
-              }}
-            >
-              Start Another
-            </button>
           </div>
         )}
       </div>
-      <Footer isDarkMode={isDarkMode} isAuthenticated={true} />
+
+      <Footer />
     </div>
   );
 }

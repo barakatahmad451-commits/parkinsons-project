@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Brain, Menu, X, LogOut } from "lucide-react";
+import { Brain, Menu, X, LogOut, Sun, Moon } from "lucide-react";
+import { useDarkMode } from "../context/DarkModeContext";
 
-export default function Navbar({ isDarkMode, isAuthenticated = false, setIsLoggedIn = null }) {
+export default function Navbar({ isAuthenticated = false, setIsLoggedIn = null }) {
   const [isOpen, setIsOpen] = useState(false);
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   const navigate = useNavigate();
 
   const textPrimary = isDarkMode ? "white" : "#0f1729";
@@ -29,7 +31,8 @@ export default function Navbar({ isDarkMode, isAuthenticated = false, setIsLogge
     { label: "Dashboard", path: "/dashboard" },
     { label: "New Analysis", path: "/new-analysis" },
     { label: "My Reports", path: "/my-reports" },
-    { label: "Profile", path: "/profile" }
+    { label: "Profile", path: "/profile" },
+    { label: "Admin Login", path: "/admin-login" }
   ];
 
   const handleLogout = () => {
@@ -43,7 +46,7 @@ export default function Navbar({ isDarkMode, isAuthenticated = false, setIsLogge
     <nav style={{
       background: navBg,
       borderBottom: navBorder,
-      padding: "0 30px",
+      padding: "0 clamp(15px, 5vw, 30px)",
       position: "sticky",
       top: 0,
       zIndex: 100,
@@ -52,24 +55,36 @@ export default function Navbar({ isDarkMode, isAuthenticated = false, setIsLogge
         ? "0 4px 20px rgba(0, 0, 0, 0.2)" 
         : "0 4px 20px rgba(59, 130, 246, 0.1)"
     }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-nav { display: none !important; }
+          .mobile-menu-toggle { display: block !important; }
+        }
+        @media (min-width: 769px) {
+          .desktop-nav { display: flex !important; }
+          .mobile-menu-toggle { display: none !important; }
+        }
+      `}</style>
       <div style={{ 
         maxWidth: "1400px", 
         margin: "0 auto", 
         display: "flex", 
         justifyContent: "space-between", 
         alignItems: "center", 
-        height: "70px" 
+        height: "clamp(60px, 10vh, 70px)",
+        width: "100%"
       }}>
         {/* Logo */}
         <Link to={isAuthenticated ? "/dashboard" : "/"} style={{
           display: "flex",
           alignItems: "center",
-          gap: "12px",
+          gap: "clamp(8px, 2vw, 12px)",
           textDecoration: "none",
           color: textPrimary,
           fontWeight: "700",
-          fontSize: "22px",
-          transition: "all 0.3s ease"
+          fontSize: "clamp(18px, 5vw, 22px)",
+          transition: "all 0.3s ease",
+          whiteSpace: "nowrap"
         }}
         onMouseEnter={(e) => {
           e.target.style.transform = "scale(1.05)";
@@ -79,8 +94,8 @@ export default function Navbar({ isDarkMode, isAuthenticated = false, setIsLogge
         }}
         >
           <div style={{
-            width: "40px",
-            height: "40px",
+            width: "clamp(35px, 8vw, 40px)",
+            height: "clamp(35px, 8vw, 40px)",
             background: "linear-gradient(135deg, #3b82f6, #0ea5e9)",
             borderRadius: "10px",
             display: "flex",
@@ -88,17 +103,16 @@ export default function Navbar({ isDarkMode, isAuthenticated = false, setIsLogge
             justifyContent: "center",
             boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)"
           }}>
-            <Brain size={24} color="white" />
+            <Brain size={Math.min(24, Math.max(18, parseInt(window.innerWidth / 50)))} color="white" />
           </div>
-          NeuroVoice
+          NeuroVox
         </Link>
 
         {/* Desktop Navigation */}
-        <div style={{ 
+        <div className="desktop-nav" style={{ 
           display: "flex", 
-          gap: "35px", 
-          alignItems: "center",
-          "@media (max-width: 768px)": { display: "none" }
+          gap: "clamp(20px, 3vw, 35px)", 
+          alignItems: "center"
         }}>
           {(isAuthenticated ? authenticatedLinks : publicLinks).map((link) => (
             <Link 
@@ -126,6 +140,38 @@ export default function Navbar({ isDarkMode, isAuthenticated = false, setIsLogge
               {link.label}
             </Link>
           ))}
+          
+          {/* Dark Mode Toggle */}
+          <button
+            onClick={toggleDarkMode}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+              border: `1px solid ${isDarkMode ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)"}`,
+              color: textPrimary,
+              padding: "8px 12px",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: "600",
+              transition: "all 0.3s ease",
+              width: "40px",
+              height: "40px"
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = isDarkMode ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)";
+              e.target.style.transform = "scale(1.1)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)";
+              e.target.style.transform = "scale(1)";
+            }}
+            title={isDarkMode ? "Light Mode" : "Dark Mode"}
+          >
+            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
           
           {isAuthenticated && (
             <button
@@ -165,9 +211,9 @@ export default function Navbar({ isDarkMode, isAuthenticated = false, setIsLogge
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
+          className="mobile-menu-toggle"
           style={{
             display: "none",
-            "@media (max-width: 768px)": { display: "flex" },
             backgroundColor: "transparent",
             border: "none",
             color: textPrimary,
@@ -189,14 +235,13 @@ export default function Navbar({ isDarkMode, isAuthenticated = false, setIsLogge
       {/* Mobile Navigation */}
       {isOpen && (
         <div style={{
-          display: "none",
-          "@media (max-width: 768px)": { display: "flex" },
           flexDirection: "column",
           gap: "15px",
           padding: "20px",
           backgroundColor: isDarkMode ? "rgba(15, 23, 42, 0.99)" : "rgba(255, 255, 255, 0.99)",
           borderTop: navBorder,
-          animation: "slideDown 0.3s ease-out"
+          animation: "slideDown 0.3s ease-out",
+          display: "flex"
         }}>
           <style>{`
             @keyframes slideDown {
@@ -238,6 +283,36 @@ export default function Navbar({ isDarkMode, isAuthenticated = false, setIsLogge
               {link.label}
             </Link>
           ))}
+          
+          {/* Mobile Dark Mode Toggle */}
+          <button
+            onClick={toggleDarkMode}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+              border: `1px solid ${isDarkMode ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)"}`,
+              color: textPrimary,
+              padding: "10px 16px",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: "600",
+              transition: "all 0.3s ease",
+              width: "100%"
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = isDarkMode ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)";
+            }}
+          >
+            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+            {isDarkMode ? "Light Mode" : "Dark Mode"}
+          </button>
           
           {isAuthenticated && (
             <button
