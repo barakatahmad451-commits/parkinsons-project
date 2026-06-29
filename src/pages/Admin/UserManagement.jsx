@@ -7,14 +7,13 @@ import { useDarkMode } from "../../context/DarkModeContext";
 export default function UserManagement({ setIsLoggedIn }) {
   const { isDarkMode } = useDarkMode();
   const [searchTerm, setSearchTerm] = useState("");
-
-  const users = [
+  const [users, setUsers] = useState([
     { id: 1, name: "Ahmed Khan", email: "ahmed@example.com", role: "User", status: "Active", joinDate: "2024-01-15" },
     { id: 2, name: "Fatima Ali", email: "fatima@example.com", role: "User", status: "Active", joinDate: "2024-02-20" },
     { id: 3, name: "Hassan Raza", email: "hassan@example.com", role: "Admin", status: "Active", joinDate: "2024-01-10" },
     { id: 4, name: "Ayesha Malik", email: "ayesha@example.com", role: "User", status: "Inactive", joinDate: "2024-03-05" },
     { id: 5, name: "Ali Hassan", email: "ali@example.com", role: "User", status: "Active", joinDate: "2024-03-10" },
-  ];
+  ]);
 
   const bgGradient = isDarkMode
     ? "linear-gradient(135deg, #0f1729 0%, rgba(20, 45, 100, 0.8) 100%)"
@@ -35,6 +34,14 @@ export default function UserManagement({ setIsLoggedIn }) {
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const toggleUserStatus = (id) => {
+    setUsers(users.map((user) => (user.id === id ? { ...user, status: user.status === "Active" ? "Inactive" : "Active" } : user)));
+  };
+
+  const deleteUser = (id) => {
+    setUsers(users.filter((user) => user.id !== id));
+  };
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: bgGradient }}>
@@ -199,6 +206,7 @@ export default function UserManagement({ setIsLoggedIn }) {
                       </td>
                       <td style={{ padding: "15px", textAlign: "center" }}>
                         <button
+                          onClick={() => toggleUserStatus(user.id)}
                           style={{
                             backgroundColor: "transparent",
                             border: "none",
@@ -213,11 +221,12 @@ export default function UserManagement({ setIsLoggedIn }) {
                           onMouseLeave={(e) => {
                             e.target.style.transform = "scale(1)";
                           }}
-                          title="Edit"
+                          title="Toggle status"
                         >
                           <Edit2 size={16} />
                         </button>
                         <button
+                          onClick={() => deleteUser(user.id)}
                           style={{
                             backgroundColor: "transparent",
                             border: "none",

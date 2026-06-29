@@ -66,7 +66,12 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route
             path="/login"
-            element={<Login setIsLoggedIn={setIsLoggedIn} />}
+            element={
+              <Login
+                setIsLoggedIn={setIsLoggedIn}
+                setIsAdminLoggedIn={setIsAdminLoggedIn}
+              />
+            }
           />
           <Route
             path="/signup"

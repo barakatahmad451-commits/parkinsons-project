@@ -6,7 +6,7 @@ import Footer from "../components/Footer";
 import { useDarkMode } from "../context/DarkModeContext";
 import { useNotification } from "../context/NotificationContext";
 
-export default function Login({ setIsLoggedIn }) {
+export default function Login({ setIsLoggedIn, setIsAdminLoggedIn }) {
   const [showPassword, setShowPassword] = useState(false);
   const [inputValue, setInputValue] = useState({ user: "", pass: "" });
   const [isLoading, setIsLoading] = useState(false);
@@ -44,20 +44,32 @@ export default function Login({ setIsLoggedIn }) {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       addNotification("Please fix the errors in the form", "error");
       return;
     }
 
+    const isAdminLogin =
+      inputValue.user.trim().toLowerCase() === "admin@neurovox.com" &&
+      inputValue.pass === "Admin@123";
+
     setIsLoading(true);
-    addNotification("Logging in...", "info");
-    
+    addNotification(isAdminLogin ? "Accessing admin panel..." : "Logging in...", "info");
+
     setTimeout(() => {
       setIsLoading(false);
-      setIsLoggedIn(true);
-      addNotification("Login successful! Welcome back", "success");
-      navigate("/dashboard");
+      if (isAdminLogin) {
+        setIsAdminLoggedIn(true);
+        setIsLoggedIn(true);
+        addNotification("Admin login successful", "success");
+        navigate("/admin/dashboard");
+      } else {
+        setIsAdminLoggedIn(false);
+        setIsLoggedIn(true);
+        addNotification("Login successful! Welcome back", "success");
+        navigate("/dashboard");
+      }
     }, 1500);
   };
 
@@ -703,45 +715,6 @@ export default function Login({ setIsLoggedIn }) {
                 </div>
               </div>
 
-              {/* Theme Toggle - Centered at Bottom */}
-              <div
-                style={{
-                  position: "relative",
-                  zIndex: 2,
-                  width: "100%",
-                  marginTop: "auto",
-                }}
-              >
-                <button
-                  onClick={() => setIsDarkMode(!isDarkMode)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 16px",
-                    background: isDarkMode
-                      ? "rgba(255, 255, 255, 0.1)"
-                      : "rgba(0, 0, 0, 0.05)",
-                    border: `1px solid ${isDarkMode ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)"}`,
-                    borderRadius: "10px",
-                    color: textSecondary,
-                    cursor: "pointer",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    transition: "all 0.2s ease",
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = isDarkMode
-                      ? "rgba(255, 255, 255, 0.15)"
-                      : "rgba(0, 0, 0, 0.1)";
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = isDarkMode
-                      ? "rgba(255, 255, 255, 0.1)"
-                      : "rgba(0, 0, 0, 0.05)";
-                  }}
-                >
-                  {isDarkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
-                </button>
-              </div>
             </div>
           </div>
         </div>

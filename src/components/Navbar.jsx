@@ -31,8 +31,7 @@ export default function Navbar({ isAuthenticated = false, setIsLoggedIn = null }
     { label: "Dashboard", path: "/dashboard" },
     { label: "New Analysis", path: "/new-analysis" },
     { label: "My Reports", path: "/my-reports" },
-    { label: "Profile", path: "/profile" },
-    { label: "Admin Login", path: "/admin-login" }
+    { label: "Profile", path: "/profile" }
   ];
 
   const handleLogout = () => {
